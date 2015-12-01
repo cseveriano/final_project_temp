@@ -1,5 +1,5 @@
-function [training_data] = generateTrainingData(data, window_size)
-    nsamples_daily = size(window_size,2);
+function [training_data] = generateInputData(data, window_size)
+    nsamples_daily = size(data,2);
     input = [];
     output = [];
     start_index = [];
@@ -9,7 +9,13 @@ function [training_data] = generateTrainingData(data, window_size)
     for i = 1 : numel(seq_data) - window_size - 1
         input = [input; seq_data(i:i+window_size-1)'];
         output = [output; seq_data(i+window_size)];
-        start_index = [start_index; mod(i,nsamples_daily)];
+        st = mod(i,nsamples_daily);
+        
+        if (st == 0)
+            st = nsamples_daily;
+        end
+                       
+        start_index = [start_index; st];
     end
     
     training_data.input = input;

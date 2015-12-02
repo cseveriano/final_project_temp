@@ -1,8 +1,10 @@
+clear all;
+
 dirPath =  'C:\Users\Carlos\Documents\Projetos Machine Learning\Multiagent\Data\Input\*\*\';
 dirPath2 =  'C:\Users\Carlos\Documents\Projetos Machine Learning\ANN-CV\CODES\Git\AN-CV\Kyoto\Data\INPUTS\Delta\2013-04\2013-04[AVG-30]\';
 file_pattern = '*[AVG-30].txt';
 window_size = 8;
-nclusters = 2;
+nclusters = 6;
 
 % Read data files
 files = rdir(strcat(dirPath, file_pattern));
@@ -64,9 +66,20 @@ for t = 1 : ntestSamples
 end
 
 
-disp('Accuracy mean :');
+disp('PSA + ELM - Accuracy mean :');
 disp(mean(accuracy));
 
 
+% Run entire train data
+entire_train_data = generateInputData(train_data, window_size);
+entire_elm_model = trainELM(entire_train_data, 4, 'sig');
+
+for t = 1 : ntestSamples
+    result = testELM(test_input_data, t, entire_elm_model);
+    accuracy(t) = result.TestingAccuracy;
+end
+
+disp('ELM - Accuracy mean :');
+disp(mean(accuracy));
 
 

@@ -5,6 +5,7 @@ dirPath2 =  'C:\Users\Carlos\Documents\Projetos Machine Learning\ANN-CV\CODES\Gi
 file_pattern = '*[AVG-30].txt';
 window_size = 8;
 nclusters = 6;
+hidden_layer = 8;
 
 % Read data files
 files = rdir(strcat(dirPath, file_pattern));
@@ -31,7 +32,7 @@ train_data = normalized_data(Train, :);
 for i = 1 : nclusters
     cluster = train_data(clusters_indexes == i,:);
     input_data = generateInputData(cluster, window_size);
-    elm_model(i) = trainELM(input_data, 4, 'sig');
+    elm_model(i) = trainELM(input_data, hidden_layer, 'sig');
 end
 
 

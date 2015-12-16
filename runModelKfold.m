@@ -24,15 +24,20 @@ clear raw_data;
 
 % Split kfold
 Indices = crossvalind('Kfold', size(normalized_data,1), kfold);
-mean_elm_psa = zeros(kfold, 1);
-mean_elm = zeros(kfold, 1);
+mean_elm_psa_rmse = zeros(kfold, 1);
+mean_elm_psa_percent = zeros(kfold, 1);
+mean_elm_rmse = zeros(kfold, 1);
+mean_elm_percent = zeros(kfold, 1);
 
 for k = 1 : kfold
     Train = Indices ~= k;
     Test = Indices == k;
     
-    % Run PSA
+    % Run normalized data
     train_data = normalized_data(Train, :);
+
+    % Run PSA
+    tic;
     [clusters_indexes, rep_members] = psa(train_data, nclusters);
 
     % Generate Training data sets from each cluster
@@ -41,16 +46,21 @@ for k = 1 : kfold
         input_data = generateInputData(cluster, window_size);
         elm_model(i) = trainELM(input_data, hidden_layer, 'sig');
     end
-
-
+    train_time = toc;
+    
+    disp('PSA + ELM - Train Time');
+    disp(train_time);
+    
     % Generate Test data set
     test_data = normalized_data(Test, :);
     ndaily_samples = size(test_data, 2);
     test_input_data = generateInputData(test_data, window_size);
     ntestSamples = size(test_input_data.start_index, 1);
     dist_clusters = zeros(nclusters,1);
-    accuracy = zeros(ntestSamples,1);
+    accuracyRMSE = zeros(ntestSamples,1);
+    accuracyPercent = zeros(ntestSamples,1);
 
+    tic;
     for t = 1 : ntestSamples
         start_index = test_input_data.start_index(t);
 
@@ -70,32 +80,61 @@ for k = 1 : kfold
         % Test ELMs using each data set
         best_model = elm_model(ind);
         result = testELM(test_input_data, t, elm_model);
-        accuracy(t) = result.TestingAccuracy;
+        accuracyRMSE(t) = result.TestingAccuracyRMSE;
+        accuracyPercent(t) = result.TestingAccuracyPercent;
     end
+    test_time = toc;
+    
+    disp('PSA + ELM - Avg Test Time');
+    disp(test_time / ntestSamples);
 
 
-    disp('PSA + ELM - Accuracy mean :');
-    disp(mean(accuracy));
-    mean_elm_psa(k) = mean(accuracy);
+    disp('PSA + ELM - Accuracy mean RMSE:');
+    disp(mean(accuracyRMSE));
+    disp('PSA + ELM - Accuracy mean Percent:');
+    disp(mean(accuracyPercent));
+
+    mean_elm_psa_rmse(k) = mean(accuracyRMSE);
+    mean_elm_psa_percent(k) = mean(accuracyPercent);
 
 
     % Run entire train data
+    tic;
     entire_train_data = generateInputData(train_data, window_size);
     entire_elm_model = trainELM(entire_train_data, 4, 'sig');
 
+    train_time = toc;
+    
+    disp('ELM - Train Time');
+    disp(train_time);
+
+    tic;
     for t = 1 : ntestSamples
         result = testELM(test_input_data, t, entire_elm_model);
-        accuracy(t) = result.TestingAccuracy;
+        accuracyRMSE(t) = result.TestingAccuracyRMSE;
+        accuracyPercent(t) = result.TestingAccuracyPercent;
     end
+    test_time = toc;
+    
+    disp('ELM - Avg Test Time');
+    disp(test_time / ntestSamples);
 
-    disp('ELM - Accuracy mean :');
-    disp(mean(accuracy));
-    mean_elm(k) = mean(accuracy);
+    disp('ELM - Accuracy mean RMSE:');
+    disp(mean(accuracyRMSE));
+    disp('ELM - Accuracy mean Percent:');
+    disp(mean(accuracyPercent));
+
+    mean_elm_rmse(k) = mean(accuracyRMSE);
+    mean_elm_percent(k) = mean(accuracyPercent);
 end
 
 
-disp('PSA + ELM - Total Accuracy mean :');
-disp(mean(mean_elm_psa));
+disp('PSA + ELM - Total Accuracy RMSE mean :');
+disp(mean(mean_elm_psa_rmse));
+disp('PSA + ELM - Total Accuracy Percent mean :');
+disp(mean(mean_elm_psa_percent));
 
-disp('ELM - Total Accuracy mean :');
-disp(mean(mean_elm));
+disp('ELM - Total Accuracy RMSE mean :');
+disp(mean(mean_elm_rmse));
+disp('ELM - Total Accuracy Percent mean :');
+disp(mean(mean_elm_percent));

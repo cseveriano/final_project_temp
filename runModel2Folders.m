@@ -1,29 +1,41 @@
 clear all;
 
-dirPath =  'C:\Users\Carlos\Documents\Projetos Machine Learning\Multiagent\Data\Input\*\*\';
+trainPath =  'C:\Users\Carlos\Documents\Projetos Machine Learning\Multiagent\Data\Input\*\*\';
+testPath =  'C:\Users\Carlos\Documents\Projetos Machine Learning\Multiagent\Data\Test\*\*\';
 
 file_pattern = '*[AVG-30].txt';
 window_size = 8;
 nclusters = 8;
 hidden_layer = 6;
-kfold = 5;
+kfold = 1;
 
-% Read data files
-files = rdir(strcat(dirPath, file_pattern));
-raw_data = [];
+% Read train files
+files = rdir(strcat(trainPath, file_pattern));
+train_raw_data = [];
 
 for i = 1 : size(files)
     x = importdata(files(i).name,'\t', 1);
-    raw_data = [raw_data; x.data(:,1)'];
+    train_raw_data = [train_raw_data; x.data(:,1)'];
     clear x;
 end
+
+% Read test files
+files = rdir(strcat(testPath, file_pattern));
+test_raw_data = [];
+
+for i = 1 : size(files)
+    x = importdata(files(i).name,'\t', 1);
+    test_raw_data = [test_raw_data; x.data(:,1)'];
+    clear x;
+end
+
+raw_data = [train_raw_data;test_raw_data];
 
 % Normalize data
 normalized_data = -1 + 2.*(raw_data - min(min(raw_data)))./(max(max(raw_data)) - min(min(raw_data)));
 clear raw_data;
 
 % Split kfold
-Indices = crossvalind('Kfold', size(normalized_data,1), kfold);
 mean_elm_psa_rmse = zeros(kfold, 1);
 mean_elm_psa_percent = zeros(kfold, 1);
 mean_elm_rmse = zeros(kfold, 1);
@@ -35,11 +47,10 @@ mean_knn_percent = zeros(kfold, 1);
 
 
 for k = 1 : kfold
-    Train = Indices ~= k;
-    Test = Indices == k;
+    Train = size(train_raw_data, 1);
     
     % Run normalized data
-    train_data = normalized_data(Train, :);
+    train_data = normalized_data(1:Train, :);
 
     % Run PSA
     tic;
@@ -57,7 +68,7 @@ for k = 1 : kfold
     disp(train_time);
     
     % Generate Test data set
-    test_data = normalized_data(Test, :);
+    test_data = normalized_data(Train+1:end, :);
     ndaily_samples = size(test_data, 2);
     test_input_data = generateInputData(test_data, window_size);
     ntestSamples = size(test_input_data.start_index, 1);

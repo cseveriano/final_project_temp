@@ -12,13 +12,13 @@ Test.in = TestData.input(index,:)';
 min_dist_indexes = indexes(values == values(1));
 
 if length(min_dist_indexes) == 1
-    result_forecast = TrainData.output(min_dist_indexes);
+    result.forecast = TrainData.output(min_dist_indexes);
 else
-    result_forecast = mean(TrainData.output(min_dist_indexes));
+    result.forecast = mean(TrainData.output(min_dist_indexes));
 end
 
-result.TestingAccuracyRMSE=sqrt(mse(Test.out - result_forecast));            %   Calculate testing accuracy (RMSE) for regression case
-result.TestingAccuracyPercent=percent(Test.out - result_forecast);
+result.TestingAccuracyRMSE=sqrt(mse(Test.out - result.forecast));            %   Calculate testing accuracy (RMSE) for regression case
+result.TestingAccuracyPercent=percent(Test.out - result.forecast);
 
 end
 

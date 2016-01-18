@@ -39,7 +39,7 @@ end
 TY=(H_test' * outWeight)';                       %   TY: the actual output of the testing data
 end_time_test=cputime;
 result.TestingTime=end_time_test-start_time_test;           %   Calculate CPU time (seconds) spent by ELM predicting the whole testing data
-
+result.forecast = TY;
 result.TestingAccuracyRMSE=sqrt(mse(TV.T - TY));            %   Calculate testing accuracy (RMSE) for regression case
 result.TestingAccuracyPercent=percent(TV.T - TY);
 end
